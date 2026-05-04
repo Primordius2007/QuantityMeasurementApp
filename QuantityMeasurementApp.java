@@ -35,6 +35,9 @@ public class QuantityMeasurementApp {
     }
 
     public static void demonstrateFeetEquality() {
+    public static void main(String[] args) {
+
+        // UC1: Feet measurement equality
         Feet feet1 = new Feet(1.0);
         Feet feet2 = new Feet(1.0);
         System.out.println("Are 1.0 ft and 1.0 ft equal? " + feet1.equals(feet2));
