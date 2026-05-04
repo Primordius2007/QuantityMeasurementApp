@@ -25,6 +25,33 @@ enum LengthUnit {
     }
 }
 
+enum WeightUnit {
+    MILLIGRAM(0.001),
+    GRAM(1.0),
+    KILOGRAM(1000.0),
+    POUND(453.592),
+    TONNE(1_000_000.0);
+
+    private final double conversionFactor;
+
+    WeightUnit(double conversionFactor) {
+        this.conversionFactor = conversionFactor;
+    }
+
+    public double getConversionFactor() {
+        return conversionFactor;
+    }
+
+    public double convertToBaseUnit(double value) {
+        return Math.round(value * conversionFactor * 100.0) / 100.0;
+    }
+
+    public double convertFromBaseUnit(double baseValue) {
+        return Math.round((baseValue / conversionFactor) * 100.0) / 100.0;
+    }
+}
+
+public class QuantityMeasurementApp {
 public class QuantityMeasurementApp {
 public class QuantityMeasurementApp {
 
@@ -121,6 +148,38 @@ public class QuantityMeasurementApp {
         @Override
         public String toString() {
             return String.format("%.2f %s", value, unit);
+        }
+    }
+
+    static class Weight {
+        private final double value;
+        private final WeightUnit unit;
+
+        public Weight(double value, WeightUnit unit) {
+            if (unit == null) throw new IllegalArgumentException("Unit must not be null");
+            if (!Double.isFinite(value)) throw new IllegalArgumentException("Value must be a finite number");
+            this.value = value;
+            this.unit = unit;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public WeightUnit getUnit() {
+            return unit;
+        }
+
+        private double convertToBaseUnit() {
+            return unit.convertToBaseUnit(value);
+        }
+
+        private double convertFromBaseToTargetUnit(double weightInGrams, WeightUnit targetUnit) {
+            return targetUnit.convertFromBaseUnit(weightInGrams);
+        }
+
+        private boolean compare(Weight thatWeight) {
+            return Double.compare(this.convertToBaseUnit(), thatWeight.convertToBaseUnit()) == 0;
             double baseValue = this.convertToBaseUnit();
             double convertedValue = Math.round((baseValue / targetUnit.getConversionFactor()) * 100.0) / 100.0;
             return new Length(convertedValue, targetUnit);
@@ -145,6 +204,37 @@ public class QuantityMeasurementApp {
         public boolean equals(Object obj) {
             if (this == obj) return true;
             if (obj == null || getClass() != obj.getClass()) return false;
+            Weight that = (Weight) obj;
+            return compare(that);
+        }
+
+        public Weight convertTo(WeightUnit targetUnit) {
+            if (targetUnit == null) throw new IllegalArgumentException("Target unit must not be null");
+            double convertedValue = convertFromBaseToTargetUnit(this.convertToBaseUnit(), targetUnit);
+            return new Weight(convertedValue, targetUnit);
+        }
+
+        public Weight add(Weight thatWeight) {
+            if (thatWeight == null) throw new IllegalArgumentException("Weight to add must not be null");
+            return addAndConvert(thatWeight, this.unit);
+        }
+
+        public Weight add(Weight thatWeight, WeightUnit targetUnit) {
+            if (thatWeight == null) throw new IllegalArgumentException("Weight to add must not be null");
+            if (targetUnit == null) throw new IllegalArgumentException("Target unit must not be null");
+            return addAndConvert(thatWeight, targetUnit);
+        }
+
+        private Weight addAndConvert(Weight thatWeight, WeightUnit targetUnit) {
+            double sumInBase = this.convertToBaseUnit() + thatWeight.convertToBaseUnit();
+            double resultValue = convertFromBaseToTargetUnit(sumInBase, targetUnit);
+            return new Weight(resultValue, targetUnit);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("%.2f %s", value, unit);
+        }
             Length that = (Length) obj;
             return compare(that);
         }
@@ -184,6 +274,43 @@ public class QuantityMeasurementApp {
     public static Length demonstrateLengthAddition(Length length1, Length length2, LengthUnit targetUnit) {
         Length result = length1.add(length2, targetUnit);
         System.out.println("Add " + length1 + " + " + length2 + " in " + targetUnit + " => " + result);
+        return result;
+    }
+
+    public static boolean demonstrateWeightEquality(Weight weight1, Weight weight2) {
+        boolean result = weight1.equals(weight2);
+        System.out.println("Are " + weight1 + " and " + weight2 + " equal? " + result);
+        return result;
+    }
+
+    public static boolean demonstrateWeightComparison(double value1, WeightUnit unit1, double value2, WeightUnit unit2) {
+        Weight weight1 = new Weight(value1, unit1);
+        Weight weight2 = new Weight(value2, unit2);
+        return demonstrateWeightEquality(weight1, weight2);
+    }
+
+    public static Weight demonstrateWeightConversion(double value, WeightUnit fromUnit, WeightUnit toUnit) {
+        Weight weight = new Weight(value, fromUnit);
+        Weight converted = weight.convertTo(toUnit);
+        System.out.println("Convert " + value + " " + fromUnit + " to " + toUnit + " => " + converted);
+        return converted;
+    }
+
+    public static Weight demonstrateWeightConversion(Weight weight, WeightUnit toUnit) {
+        Weight converted = weight.convertTo(toUnit);
+        System.out.println("Convert " + weight + " to " + toUnit + " => " + converted);
+        return converted;
+    }
+
+    public static Weight demonstrateWeightAddition(Weight weight1, Weight weight2) {
+        Weight result = weight1.add(weight2);
+        System.out.println("Add " + weight1 + " + " + weight2 + " => " + result);
+        return result;
+    }
+
+    public static Weight demonstrateWeightAddition(Weight weight1, Weight weight2, WeightUnit targetUnit) {
+        Weight result = weight1.add(weight2, targetUnit);
+        System.out.println("Add " + weight1 + " + " + weight2 + " in " + targetUnit + " => " + result);
         return result;
     public static void demonstrateFeetEquality() {
         Length feet1 = new Length(1.0, LengthUnit.FEET);
@@ -304,6 +431,25 @@ public class QuantityMeasurementApp {
         demonstrateLengthConversion(new Length(1.0, LengthUnit.FEET), LengthUnit.INCHES);
         demonstrateLengthAddition(new Length(1.0, LengthUnit.FEET), new Length(12.0, LengthUnit.INCHES), LengthUnit.FEET);
         demonstrateLengthComparison(36.0, LengthUnit.INCHES, 1.0, LengthUnit.YARDS);
+
+        // UC9: Weight measurement equality, conversion, and addition
+        demonstrateWeightComparison(1.0, WeightUnit.KILOGRAM, 1.0, WeightUnit.KILOGRAM);
+        demonstrateWeightComparison(1.0, WeightUnit.KILOGRAM, 1000.0, WeightUnit.GRAM);
+        demonstrateWeightComparison(2.0, WeightUnit.POUND, 2.0, WeightUnit.POUND);
+        demonstrateWeightComparison(500.0, WeightUnit.GRAM, 0.5, WeightUnit.KILOGRAM);
+        demonstrateWeightComparison(1.0, WeightUnit.POUND, 453.592, WeightUnit.GRAM);
+        demonstrateWeightConversion(1.0, WeightUnit.KILOGRAM, WeightUnit.GRAM);
+        demonstrateWeightConversion(2.0, WeightUnit.POUND, WeightUnit.KILOGRAM);
+        demonstrateWeightConversion(500.0, WeightUnit.GRAM, WeightUnit.POUND);
+        demonstrateWeightConversion(0.0, WeightUnit.KILOGRAM, WeightUnit.GRAM);
+        demonstrateWeightConversion(new Weight(2.54, WeightUnit.KILOGRAM), WeightUnit.GRAM);
+        demonstrateWeightAddition(new Weight(1.0, WeightUnit.KILOGRAM), new Weight(2.0, WeightUnit.KILOGRAM));
+        demonstrateWeightAddition(new Weight(1.0, WeightUnit.KILOGRAM), new Weight(1000.0, WeightUnit.GRAM));
+        demonstrateWeightAddition(new Weight(500.0, WeightUnit.GRAM), new Weight(0.5, WeightUnit.KILOGRAM));
+        demonstrateWeightAddition(new Weight(1.0, WeightUnit.KILOGRAM), new Weight(1000.0, WeightUnit.GRAM), WeightUnit.GRAM);
+        demonstrateWeightAddition(new Weight(1.0, WeightUnit.POUND), new Weight(453.592, WeightUnit.GRAM), WeightUnit.POUND);
+        demonstrateWeightAddition(new Weight(2.0, WeightUnit.KILOGRAM), new Weight(4.0, WeightUnit.POUND), WeightUnit.KILOGRAM);
+        System.out.println("Weight == Length? " + new Weight(1.0, WeightUnit.KILOGRAM).equals(new Length(1.0, LengthUnit.FEET)));
         demonstrateFeetEquality();
 
         // UC2: Inch measurement equality
