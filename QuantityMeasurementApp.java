@@ -69,6 +69,19 @@ public class QuantityMeasurementApp {
 
         public Length add(Length thatLength) {
             if (thatLength == null) throw new IllegalArgumentException("Length to add must not be null");
+            return addAndConvert(thatLength, this.unit);
+        }
+
+        public Length add(Length thatLength, LengthUnit targetUnit) {
+            if (thatLength == null) throw new IllegalArgumentException("Length to add must not be null");
+            if (targetUnit == null) throw new IllegalArgumentException("Target unit must not be null");
+            return addAndConvert(thatLength, targetUnit);
+        }
+
+        private Length addAndConvert(Length thatLength, LengthUnit targetUnit) {
+            double sumInBase = this.convertToBaseUnit() + thatLength.convertToBaseUnit();
+            double resultValue = convertFromBaseToTargetUnit(sumInBase, targetUnit);
+            return new Length(resultValue, targetUnit);
             double sumInBase = this.convertToBaseUnit() + thatLength.convertToBaseUnit();
             double resultValue = convertFromBaseToTargetUnit(sumInBase, this.unit);
             return new Length(resultValue, this.unit);
@@ -134,6 +147,12 @@ public class QuantityMeasurementApp {
     public static Length demonstrateLengthAddition(Length length1, Length length2) {
         Length result = length1.add(length2);
         System.out.println("Add " + length1 + " + " + length2 + " => " + result);
+        return result;
+    }
+
+    public static Length demonstrateLengthAddition(Length length1, Length length2, LengthUnit targetUnit) {
+        Length result = length1.add(length2, targetUnit);
+        System.out.println("Add " + length1 + " + " + length2 + " in " + targetUnit + " => " + result);
         return result;
     public static void demonstrateFeetEquality() {
         Length feet1 = new Length(1.0, LengthUnit.FEET);
@@ -220,6 +239,9 @@ public class QuantityMeasurementApp {
         demonstrateLengthConversion(36.0, LengthUnit.INCHES, LengthUnit.YARDS);
         demonstrateLengthConversion(1.0, LengthUnit.CENTIMETERS, LengthUnit.INCHES);
         demonstrateLengthConversion(0.0, LengthUnit.FEET, LengthUnit.INCHES);
+        demonstrateLengthConversion(new Length(2.0, LengthUnit.YARDS), LengthUnit.INCHES);
+
+        // UC6: Addition of two length units (result in first operand's unit)
         Length yardsInstance = new Length(2.0, LengthUnit.YARDS);
         demonstrateLengthConversion(yardsInstance, LengthUnit.INCHES);
 
@@ -232,6 +254,16 @@ public class QuantityMeasurementApp {
         demonstrateLengthAddition(new Length(2.54, LengthUnit.CENTIMETERS), new Length(1.0, LengthUnit.INCHES));
         demonstrateLengthAddition(new Length(5.0, LengthUnit.FEET), new Length(0.0, LengthUnit.INCHES));
         demonstrateLengthAddition(new Length(5.0, LengthUnit.FEET), new Length(-2.0, LengthUnit.FEET));
+
+        // UC7: Addition with explicit target unit specification
+        demonstrateLengthAddition(new Length(1.0, LengthUnit.FEET), new Length(12.0, LengthUnit.INCHES), LengthUnit.FEET);
+        demonstrateLengthAddition(new Length(1.0, LengthUnit.FEET), new Length(12.0, LengthUnit.INCHES), LengthUnit.INCHES);
+        demonstrateLengthAddition(new Length(1.0, LengthUnit.FEET), new Length(12.0, LengthUnit.INCHES), LengthUnit.YARDS);
+        demonstrateLengthAddition(new Length(1.0, LengthUnit.YARDS), new Length(3.0, LengthUnit.FEET), LengthUnit.YARDS);
+        demonstrateLengthAddition(new Length(36.0, LengthUnit.INCHES), new Length(1.0, LengthUnit.YARDS), LengthUnit.FEET);
+        demonstrateLengthAddition(new Length(2.54, LengthUnit.CENTIMETERS), new Length(1.0, LengthUnit.INCHES), LengthUnit.CENTIMETERS);
+        demonstrateLengthAddition(new Length(5.0, LengthUnit.FEET), new Length(0.0, LengthUnit.INCHES), LengthUnit.YARDS);
+        demonstrateLengthAddition(new Length(5.0, LengthUnit.FEET), new Length(-2.0, LengthUnit.FEET), LengthUnit.INCHES);
         demonstrateFeetEquality();
 
         // UC2: Inch measurement equality
