@@ -1,5 +1,31 @@
 package com.apps.quantitymeasurement;
 
+enum LengthUnit {
+    FEET(12.0),
+    INCHES(1.0),
+    YARDS(36.0),
+    CENTIMETERS(0.393701);
+
+    private final double conversionFactor;
+
+    LengthUnit(double conversionFactor) {
+        this.conversionFactor = conversionFactor;
+    }
+
+    public double getConversionFactor() {
+        return conversionFactor;
+    }
+
+    public double convertToBaseUnit(double value) {
+        return Math.round(value * conversionFactor * 100.0) / 100.0;
+    }
+
+    public double convertFromBaseUnit(double baseValue) {
+        return Math.round((baseValue / conversionFactor) * 100.0) / 100.0;
+    }
+}
+
+public class QuantityMeasurementApp {
 public class QuantityMeasurementApp {
 
     enum LengthUnit {
@@ -30,6 +56,11 @@ public class QuantityMeasurementApp {
         }
 
         private double convertToBaseUnit() {
+            return unit.convertToBaseUnit(value);
+        }
+
+        private double convertFromBaseToTargetUnit(double lengthInInches, LengthUnit targetUnit) {
+            return targetUnit.convertFromBaseUnit(lengthInInches);
             return Math.round(value * unit.getConversionFactor() * 100.0) / 100.0;
         }
 
@@ -264,6 +295,15 @@ public class QuantityMeasurementApp {
         demonstrateLengthAddition(new Length(2.54, LengthUnit.CENTIMETERS), new Length(1.0, LengthUnit.INCHES), LengthUnit.CENTIMETERS);
         demonstrateLengthAddition(new Length(5.0, LengthUnit.FEET), new Length(0.0, LengthUnit.INCHES), LengthUnit.YARDS);
         demonstrateLengthAddition(new Length(5.0, LengthUnit.FEET), new Length(-2.0, LengthUnit.FEET), LengthUnit.INCHES);
+
+        // UC8: Standalone LengthUnit with conversion responsibility
+        System.out.println("FEET.convertToBaseUnit(12.0) => " + LengthUnit.FEET.convertToBaseUnit(12.0));
+        System.out.println("INCHES.convertToBaseUnit(12.0) => " + LengthUnit.INCHES.convertToBaseUnit(12.0));
+        System.out.println("YARDS.convertToBaseUnit(1.0) => " + LengthUnit.YARDS.convertToBaseUnit(1.0));
+        System.out.println("FEET.convertFromBaseUnit(36.0) => " + LengthUnit.FEET.convertFromBaseUnit(36.0));
+        demonstrateLengthConversion(new Length(1.0, LengthUnit.FEET), LengthUnit.INCHES);
+        demonstrateLengthAddition(new Length(1.0, LengthUnit.FEET), new Length(12.0, LengthUnit.INCHES), LengthUnit.FEET);
+        demonstrateLengthComparison(36.0, LengthUnit.INCHES, 1.0, LengthUnit.YARDS);
         demonstrateFeetEquality();
 
         // UC2: Inch measurement equality
