@@ -18,6 +18,23 @@ public class QuantityMeasurementApp {
         }
     }
 
+    static class Inch {
+        private final double value;
+
+        public Inch(double value) {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null || getClass() != obj.getClass()) return false;
+            Inch inch = (Inch) obj;
+            return Double.compare(this.value, inch.value) == 0;
+        }
+    }
+
+    public static void demonstrateFeetEquality() {
     public static void main(String[] args) {
 
         // UC1: Feet measurement equality
@@ -28,5 +45,24 @@ public class QuantityMeasurementApp {
         Feet feet3 = new Feet(1.0);
         Feet feet4 = new Feet(2.0);
         System.out.println("Are 1.0 ft and 2.0 ft equal? " + feet3.equals(feet4));
+    }
+
+    public static void demonstrateInchEquality() {
+        Inch inch1 = new Inch(1.0);
+        Inch inch2 = new Inch(1.0);
+        System.out.println("Are 1.0 in and 1.0 in equal? " + inch1.equals(inch2));
+
+        Inch inch3 = new Inch(1.0);
+        Inch inch4 = new Inch(2.0);
+        System.out.println("Are 1.0 in and 2.0 in equal? " + inch3.equals(inch4));
+    }
+
+    public static void main(String[] args) {
+
+        // UC1: Feet measurement equality
+        demonstrateFeetEquality();
+
+        // UC2: Inch measurement equality
+        demonstrateInchEquality();
     }
 }
